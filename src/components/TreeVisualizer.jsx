@@ -122,39 +122,29 @@ export default function TreeVisualizer({
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          {/* Active Node Glow Filter */}
-          <filter id="active-glow" x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#38bdf8" floodOpacity="0.85" />
+          {/* Subtle Natural Shadow Filter */}
+          <filter id="active-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000000" floodOpacity="0.25" />
           </filter>
 
-          {/* Visited Node Glow Filter */}
-          <filter id="visited-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#10b981" floodOpacity="0.6" />
-          </filter>
-
-          {/* Active Edge Glow */}
-          <filter id="edge-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#a855f7" floodOpacity="0.9" />
-          </filter>
-
-          {/* Gradients */}
+          {/* Gradients (Natural, Clean Hues) */}
           <linearGradient id="unvisited-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#0f172a" />
+            <stop offset="0%" stopColor="#27272a" />
+            <stop offset="100%" stopColor="#18181b" />
           </linearGradient>
 
           <linearGradient id="active-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#2563eb" />
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
 
           <linearGradient id="visited-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="0%" stopColor="#10b981" />
             <stop offset="100%" stopColor="#059669" />
           </linearGradient>
 
           <linearGradient id="selected-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
         </defs>
@@ -186,16 +176,15 @@ export default function TreeVisualizer({
                   fill="none"
                   stroke={
                     isEdgeActive
-                      ? '#c084fc'
+                      ? '#2563eb'
                       : isEdgeVisited
                       ? '#10b981'
                       : '#334155'
                   }
-                  strokeWidth={isEdgeActive ? '3.5' : '2.5'}
-                  strokeDasharray={isEdgeActive ? '6 4' : 'none'}
+                  strokeWidth={isEdgeActive ? '3' : '2'}
+                  strokeDasharray={isEdgeActive ? '5 3' : 'none'}
                   strokeLinecap="round"
-                  filter={isEdgeActive ? 'url(#edge-glow)' : 'none'}
-                  className="transition-colors duration-300"
+                  className="transition-colors duration-200"
                 />
               </g>
             );

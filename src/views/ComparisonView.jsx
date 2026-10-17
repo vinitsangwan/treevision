@@ -71,25 +71,25 @@ export default function ComparisonView({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Columns className="w-6 h-6 text-indigo-400" />
-            <span>Traversal Comparison Suite</span>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Columns className="w-5 h-5 text-indigo-500" />
+            <span>Traversal Comparison</span>
           </h2>
-          <p className="text-sm text-slate-400">
-            Compare how Preorder, Inorder, and Postorder evaluate the exact same binary tree side by side.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Compare Preorder, Inorder, and Postorder on the exact same tree side by side.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('builder')}
-            className="px-3 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all"
           >
-            Edit Tree in Builder
+            Edit Tree
           </button>
           <button
             onClick={() => setActiveTab('simulator')}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 transition-all"
+            className="px-4 py-1.5 rounded-full text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
           >
             Open Simulator
           </button>
@@ -101,37 +101,37 @@ export default function ComparisonView({
         {/* Preorder Output Card */}
         <div
           onClick={() => setActivePreviewAlgo(ALGORITHM_TYPES.PREORDER)}
-          className={`glass-card rounded-2xl p-5 border cursor-pointer transition-all ${
+          className={`glass-card rounded-3xl p-5 border cursor-pointer transition-all hover:scale-[1.02] ${
             activePreviewAlgo === ALGORITHM_TYPES.PREORDER
-              ? 'border-blue-500 bg-slate-900/90 shadow-lg shadow-blue-500/10'
-              : 'border-slate-800 hover:border-slate-700'
+              ? 'border-blue-500 bg-white dark:bg-slate-900/90 shadow-lg shadow-blue-500/10'
+              : 'border-slate-200 dark:border-slate-800'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-mono font-bold uppercase text-blue-400 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">
+            <span className="text-[11px] font-mono font-bold uppercase text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
               Preorder (N-L-R)
             </span>
             {activePreviewAlgo === ALGORITHM_TYPES.PREORDER && (
-              <span className="text-[10px] font-semibold text-blue-300 flex items-center gap-1">
+              <span className="text-[10px] font-semibold text-blue-500 dark:text-blue-300 flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                <span>Active On Canvas</span>
+                <span>Active on Canvas</span>
               </span>
             )}
           </div>
-          <div className="text-sm font-semibold text-white mb-2">Root → Left → Right</div>
-          <div className="min-h-[56px] bg-slate-950 rounded-xl p-3 border border-slate-800/80 font-mono text-xs flex flex-wrap items-center gap-1.5 text-blue-300">
+          <div className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Root → Left → Right</div>
+          <div className="min-h-[56px] bg-slate-50 dark:bg-slate-950 rounded-2xl p-3 border border-slate-200 dark:border-slate-800/80 font-mono text-xs flex flex-wrap items-center gap-1.5 text-blue-600 dark:text-blue-300">
             {preorderList.length > 0 ? (
               preorderList.map((val, idx) => (
-                <span key={idx} className="bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                <span key={idx} className="bg-blue-500/15 px-2.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
                   {val}
                 </span>
               ))
             ) : (
-              <span className="text-slate-600 italic">Empty tree</span>
+              <span className="text-slate-400 italic">Empty tree</span>
             )}
           </div>
-          <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
-            Root is visited <strong>first</strong>. Best for cloning and prefix math expressions.
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
+            Root is visited <strong>first</strong>. Perfect for cloning and prefix math expressions.
           </p>
         </div>
 

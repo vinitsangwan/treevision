@@ -1,0 +1,538 @@
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  RotateCcw,
+  Gauge,
+  Copy,
+  Download,
+  Check,
+  Code2,
+  Layers,
+  Sparkles,
+  Info,
+  Hash,
+  Keyboard,
+  ArrowRight,
+  GitFork,
+} from 'lucide-react';
+import TreeVisualizer from '../components/TreeVisualizer';
+import {
+  ALGORITHM_TYPES,
+  ALGORITHM_METADATA,
+  generateSimulationSteps,
+} from '../algorithms/traversalEngine';
+
+export default function SimulatorView({
+  tree,
+  setActiveTab,
+}) {
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHM_TYPES.PREORDER);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeedMs, setPlaybackSpeedMs] = useState(900); // 300ms to 2000ms
+  const [showNodeNumbers, setShowNodeNumbers] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // Playback timer reference
+  const timerRef = useRef(null);
+
+  // Generate deterministic simulation steps for current tree and algorithm
+  const steps = useMemo(() => {
+    return generateSimulationSteps(tree, selectedAlgorithm);
+  }, [tree, selectedAlgorithm]);
+
+  // Current active step
+  const currentStep = steps[currentStepIndex] || {
+    stepNumber: 0,
+    activeNodeId: null,
+    activeNodeValue: null,
+    visitedNodeIds: [],
+    accumulatedOutput: [],
+    activeEdge: null,
+    callStack: [],
+    pseudocodeLine: 1,
+    action: 'Ready to start simulation',
+    explanation: 'Select an algorithm and press Play or Next Step to begin execution.',
+    leftInfo: 'None',
+    rightInfo: 'None',
+  };
+
+  // Safe Step Navigation Handlers
+  const handleNextStep = useCallback(() => {
+    setCurrentStepIndex((prev) => {
+      if (prev < steps.length - 1) {
+        return prev + 1;
+      } else {
+        setIsPlaying(false);
+        return prev;
+      }
+    });
+  }, [steps.length]);
+
+  const handlePrevStep = useCallback(() => {
+    setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
+  }, []);
+
+  const handleRestart = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentStepIndex(0);
+  }, []);
+
+  const handleResetSimulation = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentStepIndex(0);
+  }, []);
+
+  // Algorithm Switch Handler
+  const handleAlgorithmChange = (algo) => {
+    setIsPlaying(false);
+    setSelectedAlgorithm(algo);
+    setCurrentStepIndex(0);
+  };
+
+  // Automated Playback Loop
+  useEffect(() => {
+    if (isPlaying) {
+      if (currentStepIndex >= steps.length - 1) {
+        setIsPlaying(false);
+        return;
+      }
+
+      timerRef.current = setTimeout(() => {
+        handleNextStep();
+      }, playbackSpeedMs);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [isPlaying, currentStepIndex, steps.length, playbackSpeedMs, handleNextStep]);
+
+  // Keyboard Shortcuts (Space: Play/Pause, ArrowRight: Next, ArrowLeft: Prev, R: Restart)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't intercept if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsPlaying((prev) => !prev);
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        setIsPlaying(false);
+        handleNextStep();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        setIsPlaying(false);
+        handlePrevStep();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleRestart();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleNextStep, handlePrevStep, handleRestart]);
+
+  // Copy Traversal Output
+  const handleCopyOutput = () => {
+    const text = currentStep.accumulatedOutput.join(', ');
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Download Traversal Results as TXT
+  const handleDownloadResults = () => {
+    const finalStep = steps[steps.length - 1] || currentStep;
+    const content = `TreeVision — Binary Tree Traversal Simulator Results
+======================================================
+Algorithm: ${ALGORITHM_METADATA[selectedAlgorithm].name}
+Traversal Strategy: ${ALGORITHM_METADATA[selectedAlgorithm].order}
+Generated Order: [ ${finalStep.accumulatedOutput.join(', ')} ]
+Total Simulation Steps: ${steps.length}
+Visited Nodes Count: ${finalStep.accumulatedOutput.length}
+
+Step-by-Step Log:
+------------------------------------------------------
+${steps
+  .map(
+    (s) =>
+      `Step ${s.stepNumber}: [${s.action}] -> Accumulated: [${s.accumulatedOutput.join(
+        ', '
+      )}]`
+  )
+  .join('\n')}
+
+======================================================
+Generated by TreeVision DSA Educational Suite
+`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `treevision_${selectedAlgorithm.toLowerCase()}_results.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const currentMeta = ALGORITHM_METADATA[selectedAlgorithm];
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Top Header & Algorithm Selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-white">Traversal Simulator Workspace</h2>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+              Live Execution
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Watch real recursive stack frames evaluate against the binary tree in deterministic lockstep.
+          </p>
+        </div>
+
+        {/* Algorithm Tabs */}
+        <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          {[
+            { id: ALGORITHM_TYPES.PREORDER, label: 'Preorder', color: 'blue' },
+            { id: ALGORITHM_TYPES.INORDER, label: 'Inorder', color: 'emerald' },
+            { id: ALGORITHM_TYPES.POSTORDER, label: 'Postorder', color: 'purple' },
+          ].map((algo) => (
+            <button
+              key={algo.id}
+              onClick={() => handleAlgorithmChange(algo.id)}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                selectedAlgorithm === algo.id
+                  ? algo.color === 'blue'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : algo.color === 'emerald'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25'
+                    : 'bg-purple-600 text-white shadow-md shadow-purple-500/25'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              {algo.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Grid: Visualizer + Algorithm Execution Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left/Center: Visualizer and Playback Controls (7 or 8 columns) */}
+        <div className="lg:col-span-8 space-y-4">
+          {/* Main Visualizer Container */}
+          <div className="glass-panel rounded-2xl p-4 border border-slate-800 shadow-xl relative">
+            {/* Header info strip above tree */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-200">{currentMeta.name}</span>
+                <span className="text-slate-500 font-mono">({currentMeta.order})</span>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-mono">
+                <button
+                  onClick={() => setShowNodeNumbers(!showNodeNumbers)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors ${
+                    showNodeNumbers
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                  title="Toggle visitation order badges on nodes"
+                >
+                  <Hash className="w-3.5 h-3.5" />
+                  <span>Visit Order Badges</span>
+                </button>
+                <div className="text-slate-400">
+                  Step: <strong className="text-blue-400 font-bold">{currentStepIndex + 1}</strong> / {steps.length || 1}
+                </div>
+              </div>
+            </div>
+
+            {/* Tree Canvas */}
+            <TreeVisualizer
+              root={tree}
+              activeNodeId={currentStep.activeNodeId}
+              visitedNodeIds={currentStep.visitedNodeIds}
+              activeEdge={currentStep.activeEdge}
+              showNodeNumbers={showNodeNumbers}
+              height="440px"
+              interactive={false}
+            />
+
+            {/* Current Action / Explanation Banner */}
+            <div className="mt-4 p-3.5 rounded-xl bg-slate-900/90 border border-slate-700/60 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 text-xs">
+                <div className="font-semibold text-white flex items-center gap-2">
+                  <span>Action: {currentStep.action}</span>
+                  {currentStep.activeNodeValue && (
+                    <span className="font-mono px-2 py-0.2 rounded bg-blue-500/20 text-blue-300 text-[11px]">
+                      Node {currentStep.activeNodeValue}
+                    </span>
+                  )}
+                </div>
+                <p className="text-slate-300 leading-relaxed">{currentStep.explanation}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Simulation Controls Bar */}
+          <div className="glass-panel rounded-2xl p-4 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            {/* Playback Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRestart}
+                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                title="Restart (R)"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={handlePrevStep}
+                disabled={currentStepIndex === 0}
+                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                title="Previous Step (Left Arrow)"
+              >
+                <SkipBack className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg ${
+                  isPlaying
+                    ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30'
+                }`}
+                title="Play / Pause (Space)"
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                <span>{isPlaying ? 'Pause' : 'Play Simulation'}</span>
+              </button>
+
+              <button
+                onClick={handleNextStep}
+                disabled={currentStepIndex >= steps.length - 1}
+                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                title="Next Step (Right Arrow)"
+              >
+                <SkipForward className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Animation Speed Slider */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <Gauge className="w-4 h-4 text-blue-400" />
+                <span className="hidden sm:inline">Speed:</span>
+              </div>
+              <input
+                type="range"
+                min="200"
+                max="1800"
+                step="100"
+                value={2000 - playbackSpeedMs}
+                onChange={(e) => setPlaybackSpeedMs(2000 - Number(e.target.value))}
+                className="w-24 sm:w-32 accent-blue-500 cursor-pointer"
+                title="Adjust animation playback delay"
+              />
+              <span className="text-[11px] font-mono text-slate-400 w-12 text-right">
+                {((2000 - playbackSpeedMs) / 1000).toFixed(1)}x
+              </span>
+            </div>
+
+            {/* Keyboard shortcut hint */}
+            <div className="hidden xl:flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+              <Keyboard className="w-3.5 h-3.5" />
+              <span>Space: Play/Pause | ← / →: Step | R: Reset</span>
+            </div>
+          </div>
+
+          {/* Accumulated Output Ribbon with Copy & Download */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+                <span>Output Sequence Accumulated So Far:</span>
+                <span className="text-blue-400 font-mono">
+                  ({currentStep.accumulatedOutput.length} nodes visited)
+                </span>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyOutput}
+                  disabled={currentStep.accumulatedOutput.length === 0}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white disabled:opacity-40 transition-colors"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'Copied!' : 'Copy'}</span>
+                </button>
+                <button
+                  onClick={handleDownloadResults}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download TXT</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="min-h-[48px] bg-slate-950/90 rounded-xl p-3 border border-slate-800/80 flex flex-wrap items-center gap-2 font-mono">
+              {currentStep.accumulatedOutput.length > 0 ? (
+                currentStep.accumulatedOutput.map((val, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold animate-fadeIn"
+                  >
+                    <span>{val}</span>
+                    {idx < currentStep.accumulatedOutput.length - 1 && (
+                      <span className="text-slate-600 font-normal">,</span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <span className="text-xs text-slate-600 italic">
+                  Simulation hasn't visited any nodes yet. Click Next or Play!
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel: Algorithm Execution Details, Call Stack, & Pseudocode (4 columns) */}
+        <div className="lg:col-span-4 space-y-4">
+          {/* Algorithm Info & Line Highlight */}
+          <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-blue-400" />
+                <span>Algorithm Pseudocode</span>
+              </h3>
+              <span className="text-[11px] font-mono text-slate-400">
+                Line {currentStep.pseudocodeLine}
+              </span>
+            </div>
+
+            {/* Pseudocode Box */}
+            <div className="bg-slate-950 rounded-xl p-3 font-mono text-xs border border-slate-800 space-y-1">
+              {currentMeta.pseudocode.map((line) => {
+                const isLineActive = currentStep.pseudocodeLine === line.line;
+                return (
+                  <div
+                    key={line.line}
+                    className={`px-2.5 py-1 rounded transition-colors ${
+                      isLineActive
+                        ? 'code-line-active text-sky-200 font-semibold'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    <span className="text-slate-600 select-none mr-2 w-4 inline-block text-right">
+                      {line.line}
+                    </span>
+                    <span>{line.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Current Recursive Context Details */}
+            <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+              <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
+                <span className="text-slate-400">Current Node:</span>
+                <span className="font-mono font-bold text-blue-400">
+                  {currentStep.activeNodeValue !== null ? `Node(${currentStep.activeNodeValue})` : 'null / none'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
+                <span className="text-slate-400">Left Child:</span>
+                <span className="font-mono text-slate-300">{currentStep.leftInfo}</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-slate-400">Right Child:</span>
+                <span className="font-mono text-slate-300">{currentStep.rightInfo}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Call Stack Visualizer */}
+          <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-purple-400" />
+                <span>Recursion Call Stack</span>
+              </h3>
+              <span className="text-[11px] font-mono text-purple-400">
+                Depth: {currentStep.callStack?.length || 0}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Active stack frames pushed during recursive calls. The topmost frame is currently executing.
+            </p>
+
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {currentStep.callStack && currentStep.callStack.length > 0 ? (
+                [...currentStep.callStack].reverse().map((frame, index) => {
+                  const isTop = index === 0;
+                  return (
+                    <div
+                      key={index}
+                      className={`p-2.5 rounded-xl border text-xs font-mono transition-all ${
+                        isTop
+                          ? 'bg-purple-950/40 border-purple-500/50 text-purple-200 shadow-sm'
+                          : 'bg-slate-900/60 border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-white">{frame.name}</span>
+                        {isTop && (
+                          <span className="text-[10px] uppercase font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded">
+                            Top of Stack
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+                        <ArrowRight className="w-3 h-3 text-purple-400" />
+                        <span>Phase: {frame.phase}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-6 text-slate-500 text-xs italic">
+                  Stack is empty (no active recursive frames)
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Complexity Summary Card */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-800 text-xs space-y-2">
+            <div className="font-semibold text-slate-300">Complexity Metrics:</div>
+            <div className="flex items-center justify-between py-1 border-b border-slate-800">
+              <span className="text-slate-400">Time Complexity:</span>
+              <span className="font-mono font-bold text-emerald-400">O(N)</span>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <span className="text-slate-400">Auxiliary Stack Space:</span>
+              <span className="font-mono font-bold text-blue-400">O(H)</span>
+            </div>
+            <div className="text-[11px] text-slate-400 pt-1 leading-normal">
+              Where N = number of nodes, and H = tree height. For balanced trees H = O(log N).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

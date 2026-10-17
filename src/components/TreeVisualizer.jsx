@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { calculateTreeLayout } from '../algorithms/layoutEngine';
-import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Info } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Sparkles } from 'lucide-react';
 
 export default function TreeVisualizer({
   root,
@@ -10,7 +10,7 @@ export default function TreeVisualizer({
   selectedNodeId = null,
   onNodeClick = null,
   showNodeNumbers = true,
-  visitedOrderMap = null, // Map of nodeId -> visitation order number (1, 2, 3...)
+  visitedOrderMap = null,
   height = '500px',
   interactive = true,
 }) {
@@ -55,18 +55,19 @@ export default function TreeVisualizer({
     setPan({ x: 0, y: 0 });
   };
 
+  // Friendly Empty State
   if (!root || layout.nodes.length === 0) {
     return (
       <div
-        className="w-full flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-800 bg-slate-900/40 text-slate-400 p-8 text-center"
+        className="w-full flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 p-8 text-center transition-all"
         style={{ height }}
       >
-        <div className="w-14 h-14 rounded-full bg-slate-800/80 flex items-center justify-center mb-3 text-slate-500">
-          <Info className="w-7 h-7" />
+        <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mb-3 text-blue-500 shadow-sm">
+          <Sparkles className="w-6 h-6 animate-pulse" />
         </div>
-        <h4 className="text-lg font-semibold text-slate-200">Binary Tree is Empty</h4>
-        <p className="text-sm text-slate-400 max-w-sm mt-1">
-          Use the Tree Builder or select a preset example (e.g. Balanced Tree) to begin the simulation.
+        <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">Your tree is waiting to grow 🌱</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 leading-relaxed">
+          Pick a quick preset like Balanced Tree above, or enter some numbers in the Tree Builder to watch the simulation come to life.
         </p>
       </div>
     );
@@ -79,37 +80,37 @@ export default function TreeVisualizer({
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-2xl overflow-hidden bg-slate-950/70 border border-slate-800/80 shadow-2xl select-none"
+      className="relative w-full rounded-3xl overflow-hidden bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xl select-none transition-colors"
       style={{ height }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Visual Canvas Controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-700/60 shadow-lg">
+      {/* Floating Canvas Controls (Friendly Pill) */}
+      <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-md">
         <button
           onClick={() => setZoom(z => Math.min(z + 0.15, 2.2))}
-          className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95"
           title="Zoom In"
         >
-          <ZoomIn className="w-4 h-4" />
+          <ZoomIn className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setZoom(z => Math.max(z - 0.15, 0.5))}
-          className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95"
           title="Zoom Out"
         >
-          <ZoomOut className="w-4 h-4" />
+          <ZoomOut className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={resetView}
-          className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95"
           title="Reset View"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
-        <div className="text-xs font-mono text-slate-400 px-1 border-l border-slate-700">
+        <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 px-1.5 border-l border-slate-200 dark:border-slate-800">
           {Math.round(zoom * 100)}%
         </div>
       </div>
@@ -123,7 +124,7 @@ export default function TreeVisualizer({
         <defs>
           {/* Active Node Glow Filter */}
           <filter id="active-glow" x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#38bdf8" floodOpacity="0.9" />
+            <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#38bdf8" floodOpacity="0.85" />
           </filter>
 
           {/* Visited Node Glow Filter */}
@@ -159,7 +160,7 @@ export default function TreeVisualizer({
         </defs>
 
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} style={{ transformOrigin: 'center' }}>
-          {/* Edges */}
+          {/* Smooth Curved Edges (Organic Branch Feel) */}
           {layout.edges.map(edge => {
             const isEdgeActive =
               activeEdge &&
@@ -167,23 +168,22 @@ export default function TreeVisualizer({
                (activeEdge.toId === edge.fromId && activeEdge.fromId === edge.toId));
 
             const isEdgeVisited = visitedSet.has(edge.fromId) && visitedSet.has(edge.toId);
+            const midY = (edge.y1 + edge.y2) / 2;
+            const pathData = `M ${edge.x1} ${edge.y1} C ${edge.x1} ${midY}, ${edge.x2} ${midY}, ${edge.x2} ${edge.y2}`;
 
             return (
               <g key={edge.id}>
                 {/* Edge line background shadow for depth */}
-                <line
-                  x1={edge.x1}
-                  y1={edge.y1}
-                  x2={edge.x2}
-                  y2={edge.y2}
+                <path
+                  d={pathData}
+                  fill="none"
                   stroke="#020617"
                   strokeWidth="5"
+                  strokeLinecap="round"
                 />
-                <line
-                  x1={edge.x1}
-                  y1={edge.y1}
-                  x2={edge.x2}
-                  y2={edge.y2}
+                <path
+                  d={pathData}
+                  fill="none"
                   stroke={
                     isEdgeActive
                       ? '#c084fc'
@@ -192,7 +192,8 @@ export default function TreeVisualizer({
                       : '#334155'
                   }
                   strokeWidth={isEdgeActive ? '3.5' : '2.5'}
-                  strokeDasharray={isEdgeActive ? '6 3' : 'none'}
+                  strokeDasharray={isEdgeActive ? '6 4' : 'none'}
+                  strokeLinecap="round"
                   filter={isEdgeActive ? 'url(#edge-glow)' : 'none'}
                   className="transition-colors duration-300"
                 />
@@ -220,7 +221,7 @@ export default function TreeVisualizer({
                 transform={`translate(${node.x}, ${node.y})`}
                 onClick={() => interactive && onNodeClick && onNodeClick(node)}
                 className={`transition-transform duration-200 ${
-                  interactive ? 'cursor-pointer hover:scale-110' : ''
+                  interactive ? 'cursor-pointer hover:scale-110 active:scale-95' : ''
                 }`}
               >
                 {/* Outer Ring on Active / Selected */}
@@ -308,23 +309,23 @@ export default function TreeVisualizer({
         </g>
       </svg>
 
-      {/* Modern Legend */}
-      <div className="absolute bottom-3 left-4 z-10 flex flex-wrap items-center gap-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-md">
+      {/* Modern Friendly Floating Legend */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex flex-wrap items-center justify-center gap-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 shadow-lg shadow-black/5">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50 inline-block" />
-          <span>Active / Current</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50 inline-block" />
+          <span>Active</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 inline-block" />
           <span>Visited</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-slate-700 border border-slate-500 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700 border border-slate-400 dark:border-slate-600 inline-block" />
           <span>Unvisited</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3.5 h-1 bg-purple-400 rounded inline-block" />
-          <span>Active Edge</span>
+          <span className="w-3.5 h-1 bg-purple-400 rounded-full inline-block" />
+          <span>Active Path</span>
         </div>
       </div>
     </div>

@@ -29,8 +29,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"Fira Code"', 'JetBrains Mono', 'Consolas', 'monospace'],
       },
       animation: {
         'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

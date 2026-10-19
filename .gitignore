@@ -25,3 +25,8 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Compiled C++ binaries
+*.exe
+*.o
+

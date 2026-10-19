@@ -94,6 +94,7 @@ export default function App() {
         {activeTab === 'simulator' && (
           <SimulatorView
             tree={tree}
+            setTree={setTree}
             setActiveTab={setActiveTab}
           />
         )}

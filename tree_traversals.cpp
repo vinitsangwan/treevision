@@ -4,12 +4,14 @@
  * Subject: Data Structures and Algorithms (DSA) Mini Project
  * 
  * Description:
- * Standard C++ implementation of a Binary Tree with:
+ * Standard C++ implementation of a Binary Tree & Binary Search Tree (BST):
  * 1. Dynamic Node Creation (Pointers & Struct)
  * 2. Level-Order (BFS) Tree Construction using std::queue
  * 3. Preorder Traversal  (Root -> Left -> Right) - O(N) time, O(H) space
  * 4. Inorder Traversal   (Left -> Root -> Right) - O(N) time, O(H) space
  * 5. Postorder Traversal (Left -> Right -> Root) - O(N) time, O(H) space
+ * 6. BST Node Insertion  (Recursive search path) - O(H) time
+ * 7. BST Node Deletion   (Handles Leaf, 1-Child, & 2-Child with Successor) - O(H) time
  * ============================================================================
  */
 
@@ -17,7 +19,7 @@
 #include <vector>
 #include <queue>
 #include <string>
-#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -83,6 +85,78 @@ void postorder(Node* root) {
     postorder(root->left);     // 1. Explore Left
     postorder(root->right);    // 2. Explore Right
     cout << root->data << " "; // 3. Visit Root
+}
+
+/**
+ * 4. BST NODE INSERTION
+ * Follows BST invariant: smaller values go to the left, larger to the right.
+ */
+Node* insertBST(Node* root, int val) {
+    if (root == nullptr) {
+        return new Node(val);
+    }
+    if (val < root->data) {
+        root->left = insertBST(root->left, val);
+    } else if (val > root->data) {
+        root->right = insertBST(root->right, val);
+    }
+    return root;
+}
+
+/**
+ * Helper to find the node with minimum key value (Inorder Successor)
+ */
+Node* findMin(Node* root) {
+    while (root && root->left != nullptr) {
+        root = root->left;
+    }
+    return root;
+}
+
+/**
+ * 5. BST NODE DELETION
+ * Handles all 3 structural cases:
+ *  - Case 1: Leaf node (0 children) -> Delete directly
+ *  - Case 2: One child -> Bypass node and connect child to parent
+ *  - Case 3: Two children -> Replace with Inorder Successor and delete successor
+ */
+Node* deleteBST(Node* root, int val) {
+    if (root == nullptr) {
+        return nullptr;
+    }
+
+    if (val < root->data) {
+        root->left = deleteBST(root->left, val);
+    } else if (val > root->data) {
+        root->right = deleteBST(root->right, val);
+    } else {
+        // Node found!
+
+        // Case 1: Leaf node
+        if (root->left == nullptr && root->right == nullptr) {
+            delete root;
+            return nullptr;
+        }
+
+        // Case 2: One child
+        if (root->left == nullptr) {
+            Node* temp = root->right;
+            delete root;
+            return temp;
+        } else if (root->right == nullptr) {
+            Node* temp = root->left;
+            delete root;
+            return temp;
+        }
+
+        // Case 3: Two children
+        // Find inorder successor (smallest in right subtree)
+        Node* successor = findMin(root->right);
+        root->data = successor->data;
+        // Delete the inorder successor from right subtree
+        root->right = deleteBST(root->right, successor->data);
+    }
+    return root;
 }
 
 /**
@@ -179,6 +253,28 @@ int main() {
     cout << "3. Postorder Traversal (Left -> Right -> Root):\n   ";
     postorder(root);
     cout << "\n   Expected: 3 7 5 15 25 20 10\n";
+    cout << "-------------------------------------------------------\n\n";
+
+    // Demonstrate BST Insertion
+    cout << ">> BST Insertion: Inserting node [ 12 ]...\n";
+    root = insertBST(root, 12);
+    cout << "   Inorder after inserting 12: ";
+    inorder(root);
+    cout << "\n   (Notice 12 is placed in correct sorted order)\n\n";
+
+    // Demonstrate BST Deletion (Case 1: Leaf node)
+    cout << ">> BST Deletion: Deleting leaf node [ 3 ] (Case 1)...\n";
+    root = deleteBST(root, 3);
+    cout << "   Inorder after deleting 3: ";
+    inorder(root);
+    cout << "\n\n";
+
+    // Demonstrate BST Deletion (Case 3: Node with 2 children)
+    cout << ">> BST Deletion: Deleting node [ 20 ] with 2 children (Case 3)...\n";
+    root = deleteBST(root, 20);
+    cout << "   Inorder after deleting 20: ";
+    inorder(root);
+    cout << "\n   (Notice successor took its place smoothly)\n";
     cout << "-------------------------------------------------------\n\n";
 
     // Memory cleanup
